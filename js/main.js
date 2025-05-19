@@ -310,6 +310,7 @@ function renderProducts(listaProductos) {
   cajasProductos.innerHTML = html;
 
   activateAddButton();
+  updateButtons();
 }
 
 renderProducts(productosTienda);
@@ -334,6 +335,11 @@ function paintCart() {
     `;
   });
 
+  activateButtonDelete();
+  updateButtons();
+}
+
+function updateButtons() {
   const botonesCarrito = document.querySelectorAll(".card__button");
 
   botonesCarrito.forEach((boton) => {
@@ -346,8 +352,6 @@ function paintCart() {
       boton.innerText = "Add to cart";
     }
   });
-
-  activateButtonDelete();
 }
 
 function activateButtonDelete() {
@@ -361,11 +365,11 @@ function activateButtonDelete() {
 
       if (index !== -1) {
         carrito.splice(index, 1); // splice elimina el producto del carrito. Index la posicion en el array y el numero es la cantidad de elementos a eliminar
+        storageCart();
         paintCart();
       }
     });
   });
-  storageCart();
 }
 
 function activateAddButton() {
@@ -389,12 +393,11 @@ function activateAddButton() {
       if (productoSeleccionado && !carrito.some((p) => p.id === idProducto)) {
         //Si existe el producto y no está ya en el carrito
         carrito.push(productoSeleccionado); // propiedad push añade el producto al carrito
+        storageCart();
         paintCart(); // llamamos a la función paintCart para que se muestre el producto en el carrito
       }
     });
   });
-
-  storageCart();
 }
 
 // termina aqui la parte de añadir al carrito
