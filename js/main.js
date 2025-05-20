@@ -282,18 +282,22 @@ const productosTienda = [
 
 let carrito = [];
 
-const saveCart = localStorage.getItem("carrito");
+const saveCart = localStorage.getItem("carrito"); // Intenta leer desde el localStorage la clave "carrito" y
+// si existe algo guardado ahí (de una sesión anterior), lo guarda en la variable saveCart
 
 if (saveCart) {
-  carrito = JSON.parse(saveCart);
+  // si existe el carrito en localStorage
+  carrito = JSON.parse(saveCart); // parsear es convertir ese texto del localstorage y volver a convertirlo en datos JavaScript normales que pueda usar
   paintCart(); // para que se pinte el carrito al cargar la página
 }
 
 function storageCart() {
+  // esta función llama el carrito actual de localStorage
   localStorage.setItem("carrito", JSON.stringify(carrito));
 }
 
 function renderProducts(listaProductos) {
+  // funcion que pinta los productos en la página
   let html = "";
 
   listaProductos.forEach((producto) => {
@@ -309,11 +313,11 @@ function renderProducts(listaProductos) {
   });
   cajasProductos.innerHTML = html;
 
-  activateAddButton();
-  updateButtons();
+  activateAddButton(); // llamamos a la función para que se active el botón de añadir al carrito
+  updateButtons(); // llamamos a la función para que se actualicen los botones de añadir al carrito
 }
 
-renderProducts(productosTienda);
+renderProducts(productosTienda); // llamamos a la función para que se pinten los productos al cargar la página
 
 //empiezo aqui la parte de añadir al carrito
 
@@ -321,32 +325,51 @@ function paintCart() {
   añadirAlCarrito.innerHTML = "";
 
   if (carrito.length === 0) {
+    // si el carrito está vacío añadimos el mensaje de abajo
     añadirAlCarrito.innerHTML = `<li class="carrito__item carrito__item--vacio">Tu carrito está vacío 🛒</li>`;
-    return;
+    return; // si el carrito está vacío, no pintamos nada más
   }
   carrito.forEach((producto) => {
+    // recorre el carrito y pinta cada producto
     añadirAlCarrito.innerHTML += `
       <li class="carrito__item">
-        <img class="carrito__img" src="${producto.image}" alt="${producto.title}">
+        <img class="carrito__img" src="${producto.image}" alt="${
+      producto.title
+    }">
         <h3 class="carrito__title">${producto.title}</h3>
         <p class="carrito__price">€${producto.price}</p>
-        <button class="carrito__delete carrito--delete" data-id="${producto.id}">❌</button>
-      </li>
-    `;
+        <div class="carrito__cantidad">
+        <button class="carrito__btn-cantidad" data-id="${
+          producto.id
+        }" data-accion="restar">➖</button>
+        <span class="carrito__numero">${producto.cantidad}</span>
+        <button class="carrito__btn-cantidad" data-id="${
+          producto.id
+        }" data-accion="sumar">➕</button>
+        </div>
+        <p class="carrito__total-precio">Total: €${(
+          producto.price * producto.cantidad
+        ).toFixed(2)}</p>
+        <button class="carrito__delete carrito--delete" data-id="${
+          producto.id
+        }">❌</button> 
+        </li>`;
   });
 
-  activateButtonDelete();
-  updateButtons();
+  activateButtonDelete(); // llamamos a la función para que se active el botón de eliminar del carrito
+  activateCantidadButtons(); // llamamos a la función para que se active el botón de sumar y restar del carrito
+  updateButtons(); // llamamos a la función para que se actualicen los botones de añadir al carrito
 }
 
 function updateButtons() {
+  // esta funcion actualiza los botones de añadir al carrito con los estilos nuevos
   const botonesCarrito = document.querySelectorAll(".card__button");
 
   botonesCarrito.forEach((boton) => {
     const idProducto = parseInt(boton.dataset.id);
     if (carrito.some((p) => p.id === idProducto)) {
       boton.classList.add("enelcarrito");
-      boton.innerText = "Añadido";
+      boton.innerText = "Added";
     } else {
       boton.classList.remove("enelcarrito");
       boton.innerText = "Add to cart";
@@ -355,16 +378,47 @@ function updateButtons() {
 }
 
 function activateButtonDelete() {
-  const buttonDelete = document.querySelectorAll(".carrito__delete"); // en esta const guardamos todos los botones de eliminar del carrito
-
+  // esta función activa el botón de eliminar del carrito
+  const buttonDelete = document.querySelectorAll(".carrito__delete");
   buttonDelete.forEach((boton) => {
-    // recorre los botones uno a uno
     boton.addEventListener("click", () => {
       const idProducto = parseInt(boton.dataset.id); // parseInt convierte el string en un número entero y boton.dataset.id es el id del producto que se ha añadido al carrito
       const index = carrito.findIndex((p) => p.id === idProducto); // findIndex busca la posicion en el array del producto. Si el id de este coincide con el mismo id que el idProducto (botón que pulse)
 
       if (index !== -1) {
-        carrito.splice(index, 1); // splice elimina el producto del carrito. Index la posicion en el array y el numero es la cantidad de elementos a eliminar
+        carrito.splice(index, 1); // splice elimina el producto del carrito. Index es la posicion en el array y el numero es la cantidad de elementos a eliminar
+        storageCart(); // guardamos el carrito actualizado en localStorage
+        updateButtons(); // llamamos a la función para que se actualicen los botones de añadir al carrito
+        paintCart(); // llamamos a la función paintCart para que se muestre el producto en el carrito
+      }
+    });
+  });
+}
+
+function activateCantidadButtons() {
+  // esta función activa el botón de sumar y restar del carrito
+  const botonesCantidad = document.querySelectorAll(".carrito__btn-cantidad");
+
+  botonesCantidad.forEach((boton) => {
+    //recorre los botones sumar y restar uno a uno
+    boton.addEventListener("click", () => {
+      // los escucha y añade un evento a cada uno
+      const idProducto = parseInt(boton.dataset.id); // parseInt convierte el string en un número entero y boton.dataset.id es el id del producto que se ha añadido al carrito
+      const accion = boton.dataset.accion; // boton.dataset.accion es la acción que se ha pulsado (sumar o restar)
+
+      const index = carrito.findIndex((p) => p.id === idProducto); // findIndex busca la posicion en el array del producto. Si el id de este coincide con el mismo id que el idProducto (botón que pulse)
+
+      if (index !== -1) {
+        if (accion === "sumar") {
+          carrito[index].cantidad++;
+        } else if (accion === "restar") {
+          carrito[index].cantidad--;
+          // Si la cantidad baja a 0, quitamos el producto
+          if (carrito[index].cantidad === 0) {
+            carrito.splice(index, 1);
+          }
+        }
+
         storageCart();
         paintCart();
       }
@@ -391,8 +445,7 @@ function activateAddButton() {
       );
 
       if (productoSeleccionado && !carrito.some((p) => p.id === idProducto)) {
-        //Si existe el producto y no está ya en el carrito
-        carrito.push(productoSeleccionado); // propiedad push añade el producto al carrito
+        carrito.push({ ...productoSeleccionado, cantidad: 1 }); // propiedad push añade el producto al carrito
         storageCart();
         paintCart(); // llamamos a la función paintCart para que se muestre el producto en el carrito
       }
@@ -413,12 +466,12 @@ function searchAndShowProducts(valueSearch) {
 }
 
 function handleClickSearch(ev) {
-  ev.preventDefault();
-  const valueSearch = input.value.trim().toLowerCase();
-  searchAndShowProducts(valueSearch);
+  ev.preventDefault(); //evita que la página se recargue al hacer click en el botón
+  const valueSearch = input.value.trim().toLowerCase(); // guardamos en una variable el valor que la usuaria ha escrito en el input
+  searchAndShowProducts(valueSearch); // llama a la función searchAndShowProducts y le pasa el valor que ha escrito la usuaria
 }
 
-button.addEventListener("click", handleClickSearch);
+button.addEventListener("click", handleClickSearch); // añade el evento al botón de buscar y llama a la función handleClickSearch
 
 fetch(url)
   .then((response) => response.json())
